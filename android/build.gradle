@@ -36,6 +36,16 @@ android {
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
+
+    // 👇 ОСЬ ЦЕЙ БЛОК ВИПРАВЛЯЄ ПОМИЛКУ
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8' // 👈 Тут було 21 або пусто, а треба '1.8'
+    }
 }
 
 dependencies {
