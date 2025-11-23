@@ -1,27 +1,61 @@
 package com.example.flashlight_plugin
 
+import android.content.Context
+import android.hardware.camera2.CameraManager
+import android.os.Build
+import androidx.annotation.NonNull
+
+import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import org.mockito.Mockito
-import kotlin.test.Test
+import io.flutter.plugin.common.MethodChannel.MethodCallHandler
+import io.flutter.plugin.common.MethodChannel.Result
 
-/*
- * This demonstrates a simple unit test of the Kotlin portion of this plugin's implementation.
- *
- * Once you have built the plugin's example app, you can run these tests from the command
- * line by running `./gradlew testDebugUnitTest` in the `example/android/` directory, or
- * you can run them directly from IDEs that support JUnit such as Android Studio.
- */
+class FlashlightPlugin: FlutterPlugin, MethodCallHandler {
+  private lateinit var channel : MethodChannel
+  private lateinit var context: Context
+  private lateinit var cameraManager: CameraManager
 
-internal class FlashlightPluginTest {
-    @Test
-    fun onMethodCall_getPlatformVersion_returnsExpectedValue() {
-        val plugin = FlashlightPlugin()
+  override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
 
-        val call = MethodCall("getPlatformVersion", null)
-        val mockResult: MethodChannel.Result = Mockito.mock(MethodChannel.Result::class.java)
-        plugin.onMethodCall(call, mockResult)
+    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "my_flashlight_plugin")
+    channel.setMethodCallHandler(this)
+    context = flutterPluginBinding.applicationContext
+    cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+  }
 
-        Mockito.verify(mockResult).success("Android " + android.os.Build.VERSION.RELEASE)
+  override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
+    if (call.method == "turnOn") {
+      try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+          val cameraId = cameraManager.cameraIdList[0]
+          cameraManager.setTorchMode(cameraId, true)
+          result.success(null)
+        } else {
+          result.error("UNAVAILABLE", "Android version too low", null)
+        }
+      } catch (e: Exception) {
+        result.error("CAMERA_ERROR", e.message, null)
+      }
+    } else if (call.method == "turnOff") {
+      try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+          val cameraId = cameraManager.cameraIdList[0]
+          cameraManager.setTorchMode(cameraId, false)
+          result.success(null)
+        } else {
+          result.error("UNAVAILABLE", "Android version too low", null)
+        }
+      } catch (e: Exception) {
+        result.error("CAMERA_ERROR", e.message, null)
+      }
+    } else {
+      // Якщо викликають щось інше (наприклад getPlatformVersion)
+      result.notImplemented()
     }
+  }
+
+  override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+    channel.setMethodCallHandler(null)
+  }
 }
