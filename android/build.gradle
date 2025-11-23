@@ -24,7 +24,9 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    namespace 'com.example.my_flashlight_plugin' // Важливо для нових версій
+  
+    namespace 'com.example.flashlight_plugin' 
+    
     compileSdkVersion 34
 
     defaultConfig {
